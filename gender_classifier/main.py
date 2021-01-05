@@ -2,7 +2,7 @@
 import os
 from xml.etree import ElementTree
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 # sklearn libraries
 from sklearn.model_selection import train_test_split
@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, Tf
 from sklearn.decomposition import TruncatedSVD
 from sklearn import metrics
 from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.metrics import f1_score
 
     # skearn classifiers
 from sklearn.neighbors import KNeighborsClassifier
@@ -43,6 +44,13 @@ config = {
     'truth_path': '../data/pan18-author-profiling-training-dataset-2018-02-27/en/en.txt',
     'txts_destination_directory': '../data/pan18-author-profiling-training-dataset-2018-02-27/en',
 }
+config2= {
+    'dataset_name': 'PAN 2018 English',
+    'xmls_directory': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/text/',
+    'truth_path': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/en.txt',
+    'txts_destination_directory': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en',
+}
+
 
 ############################################################################################
 ##################        LOAD DATASET      ##############################################
@@ -76,6 +84,7 @@ def load_data(xmls_directory, truth_path, txts_destination_directory):
     # make sure that order is same in both cases, we are mapping the same things
     # since, author ids are sorted, hence truth file should be sorted as well
     truths_temp = []
+    truths_entry = []
     with open(truth_path, 'r') as truth_file:
         # sort ids
         for line in sorted(truth_file):
@@ -83,7 +92,14 @@ def load_data(xmls_directory, truth_path, txts_destination_directory):
             line.rstrip('\n')
 
             entry = line.split(':::')
+            
+            del entry[2:]
             truths_temp.append(entry)
+            
+            
+            
+   
+            
 
     truths = []
     # make sure allignment is correct
@@ -235,16 +251,17 @@ def extract_features(docs_train, docs_test, perform_dimensionality_reduction):
     X_train = ngrams_vectorizer.fit_transform(docs_train) #it will take a lot of time... i think
     X_test = ngrams_vectorizer.transform(docs_test)
     print("Performed fitting of data")
-    ############ removed dimensionality reduction ################
+    ############ dimensionality reduction ################
     
-   ## if(perform_dimensionality_reduction == True):                                 
-##        print("Performing dimensionality reduction")
-        # use TruncatedSVD to reduce dimensionality of our dataset
-  ##      svd = TruncatedSVD(n_components = 300, random_state = 42)
+    if(perform_dimensionality_reduction == True):                                 
 
-    ##    X_train = svd.fit_transform(X_train)
-    ##    X_test = svd.transform(X_test)
-    ##    print("Performed dimensionality reduction")
+        print("Performing dimensionality reduction")
+        # use TruncatedSVD to reduce dimensionality of our dataset
+        svd = TruncatedSVD(n_components = 300, random_state = 42)
+
+        X_train = svd.fit_transform(X_train)
+        X_test = svd.transform(X_test)
+        print("Performed dimensionality reduction")
 
 
     # print(docs_train[0])
@@ -273,31 +290,34 @@ def train_and_test_model(clf, X_train, y_train, X_test, y_test):
     plt.set_cmap('jet')
 
     plt.show()
-
+    print((y_predicted))
 
     ###################### print the accuracy of our classifier ###########################
     accuracy = metrics.accuracy_score(y_test, y_predicted, normalize = True)
     print(f'Accuracy of our classifier is : {accuracy}')
 
-    ################# f-major score #########################
-    f_major = metrics.f1_score(y_test, y_predicted, average='micro')
-    print(f'F-Major of our classifier is : {f_major}')
+    ################# f-measure score #########################
+    f_measure = metrics.f1_score(y_test, y_predicted, average='weighted', labels=np.unique(y_predicted))
+    print(f'F-Major of our classifier is : {f_measure}')
 
     ################# precesion ##############################
-    precision = metrics.precision_score(y_test, y_predicted, average='micro')
+    precision = metrics.precision_score(y_test, y_predicted, average='weighted',labels=np.unique(y_predicted))
     print(f'Precision of our classifier is {precision}')
-
+    recall=metrics.recall_score(y_test, y_predicted, average='weighted')
+    print(f'Recall of our classifier is {recall}')
+   
 ############### Main function ######################
 def main():
     print("Starting the project...")
 
     ### 1 -> Read the data from the files
-    merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config['xmls_directory'], config['truth_path'], config['txts_destination_directory'])
+    merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2['xmls_directory'], config2['truth_path'], config2['txts_destination_directory'])
+    #merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config['xmls_directory'], config['truth_path'], config['txts_destination_directory'])
     print("Loaded Pan data")
 
     ##### perform test train split
     docs_train, docs_test, y_train, y_test, author_ids_train, author_ids_test, original_tweet_lengths_train, original_tweet_lengths_test\
-        = train_test_split(merged_tweets, truths, author_ids, original_tweet_lengths, test_size = 0.4, random_state = 42, stratify = truths)
+        = train_test_split(merged_tweets, truths, author_ids, original_tweet_lengths, test_size = 0.1, random_state = 42, stratify = truths)
     print("Performed train test split")
 
     ##### maintain the order in dataset
@@ -309,13 +329,26 @@ def main():
 
 
     # extract features from the dataset
-    X_train, X_test = extract_features(docs_train, docs_test, perform_dimensionality_reduction=True)
+    X_train, X_test = extract_features(docs_train, docs_test, perform_dimensionality_reduction=False)
     print("Successfully extracted features from the documents")
 
     ######################################################################
-    # build a classifier
+    # building classifiers
+    print("###############SVM###############")
     clf = LinearSVC(random_state = 42, tol=0.3)
     train_and_test_model(clf, X_train, y_train, X_test, y_test)
+    #Decision Tree
+    print("###############Decision Tree###############")
+    clf = DecisionTreeClassifier(criterion='entropy', random_state=0)
+    train_and_test_model(clf, X_train, y_train, X_test, y_test)
+  
+    # random forest
+    print("###############Random Forest###############")
+    clf = RandomForestClassifier(n_estimators=1000)
+    train_and_test_model(clf, X_train, y_train, X_test, y_test)
+    
+    
+   
     print("Done training the dataset...")
     print("<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
