@@ -38,13 +38,13 @@ import preprocessor as tp
 from gensim.parsing.preprocessing import remove_stopwords
 
 ### global configurations #######
-config = {
+config2018 = {
     'dataset_name': 'PAN 2018 English',
     'xmls_directory': '../data/pan18-author-profiling-training-dataset-2018-02-27/en/text/',
     'truth_path': '../data/pan18-author-profiling-training-dataset-2018-02-27/en/en.txt',
     'txts_destination_directory': '../data/pan18-author-profiling-training-dataset-2018-02-27/en',
 }
-config2= {
+config2015= {
     'dataset_name': 'PAN 2018 English',
     'xmls_directory': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/text/',
     'truth_path': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/en.txt',
@@ -311,8 +311,11 @@ def main():
     print("Starting the project...")
 
     ### 1 -> Read the data from the files
-    merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2['xmls_directory'], config2['truth_path'], config2['txts_destination_directory'])
-    #merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config['xmls_directory'], config['truth_path'], config['txts_destination_directory'])
+    ##Select dataset
+    ##2015
+    merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2015['xmls_directory'], config2015['truth_path'], config2015['txts_destination_directory'])
+    ##2018
+    #merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2018['xmls_directory'], config2018['truth_path'], config2018['txts_destination_directory'])
     print("Loaded Pan data")
 
     ##### perform test train split
