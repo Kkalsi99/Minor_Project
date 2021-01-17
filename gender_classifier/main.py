@@ -3,7 +3,7 @@ import os
 from xml.etree import ElementTree
 import matplotlib.pyplot as plt
 import numpy as np
-
+import xml.etree.ElementTree as ET 
 # sklearn libraries
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer, TfidfTransformer
@@ -45,7 +45,7 @@ config2018 = {
     'txts_destination_directory': '../data/pan18-author-profiling-training-dataset-2018-02-27/en',
 }
 config2015= {
-    'dataset_name': 'PAN 2018 English',
+    'dataset_name': 'PAN 2015 English',
     'xmls_directory': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/text/',
     'truth_path': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en/en.txt',
     'txts_destination_directory': '../data/pan15-author-profiling-training-dataset-english-2015-04-23/en',
@@ -77,6 +77,7 @@ def load_data(xmls_directory, truth_path, txts_destination_directory):
     author_ids = []
     for xml_filename in xmls_filenames:
         author_ids.append(xml_filename[:-4])
+    
 
     #### truths --> go to truth location
     # split(:::)
@@ -124,21 +125,25 @@ def load_data(xmls_directory, truth_path, txts_destination_directory):
     for author_idx, xml_filename in enumerate(xmls_filenames):
         # read filename
         # construct tree of xml
-        tree = ElementTree.parse(os.path.join(xmls_directory, xml_filename), parser = ElementTree.XMLParser(encoding = 'utf-8'))
-
-        # get the root element of file
+        
+        
+        tree = ElementTree.parse(os.path.join(xmls_directory, xml_filename))
+      
         root = tree.getroot()
-
+        
         original_tweet_lengths.append([])
 
         tweets_of_this_author = []
 
         # root[0] --> first level of the tree
         # since the tweets are in 1st level 
-        for child in root[0]:
+        
+        for child in root:
 
-            tweet = child.text 
-
+            tweet = child.text
+            
+            
+	
             original_tweet_lengths[author_idx].append(len(tweet))
 
             # replace \n with lineFeed
@@ -290,7 +295,7 @@ def train_and_test_model(clf, X_train, y_train, X_test, y_test):
     plt.set_cmap('jet')
 
     plt.show()
-    print((y_predicted))
+
 
     ###################### print the accuracy of our classifier ###########################
     accuracy = metrics.accuracy_score(y_test, y_predicted, normalize = True)
@@ -315,12 +320,12 @@ def main():
     ##2015
     merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2015['xmls_directory'], config2015['truth_path'], config2015['txts_destination_directory'])
     ##2018
-    #merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2018['xmls_directory'], config2018['truth_path'], config2018['txts_destination_directory'])
+   ## merged_tweets, truths, author_ids, original_tweet_lengths = load_data(config2018['xmls_directory'], config2018['truth_path'], config2018['txts_destination_directory'])
     print("Loaded Pan data")
 
     ##### perform test train split
     docs_train, docs_test, y_train, y_test, author_ids_train, author_ids_test, original_tweet_lengths_train, original_tweet_lengths_test\
-        = train_test_split(merged_tweets, truths, author_ids, original_tweet_lengths, test_size = 0.1, random_state = 42, stratify = truths)
+        = train_test_split(merged_tweets, truths, author_ids, original_tweet_lengths, test_size = 0.48, random_state = 2, stratify = truths)
     print("Performed train test split")
 
     ##### maintain the order in dataset
