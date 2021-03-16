@@ -11,6 +11,7 @@ from nltk.corpus import wordnet
 from nltk import word_tokenize
 from nltk import pos_tag
 
+
 def get_wordnet_pos(treebank_tag):
     if treebank_tag.startswith('V'):
         return wordnet.VERB
@@ -22,10 +23,8 @@ def get_wordnet_pos(treebank_tag):
         return wordnet.NOUN
 
 
-
 def lemmatize_tweet(tweet_tokens):
     lemmatizer = WordNetLemmatizer()
-    
 
     lemmatized_tokens = []
     for token in tweet_tokens:
@@ -37,8 +36,8 @@ def lemmatize_tweet(tweet_tokens):
 
         lemmatized_tokens.append(lemmatized_token)
 
-
     return ' '.join(lemmatized_tokens)
+
 
 def preprocess_tweet(tweet):
     """
@@ -50,20 +49,19 @@ def preprocess_tweet(tweet):
         3. Replace a url with Tag: <URLURL>
         4. Replace a tag mention: <UsernameMention>
 
-    
+
     @TODO:
         1. Look for better preprocessing methods on the web
         2. Apply here
     """
     clean_tweet = tp.clean(tweet)
-    
+
     # perform lemmatization
     tokenizer = TweetTokenizer()
     tweet_tokens = tokenizer.tokenize(clean_tweet)
-    
+
     lemmatized_tweet = lemmatize_tweet(tweet_tokens)
-    
-    
+
     # remove stopwords
     preprocessed_tweet = remove_stopwords(lemmatized_tweet)
     return preprocessed_tweet
@@ -74,7 +72,7 @@ def preprocess_tweet(tweet):
 def extract_features(docs_train, docs_test, perform_dimensionality_reduction):
     """ 
     We will extract features from the dataset, preprocess it and return the X_train and X_test
-    
+
     @return:
         1. X_train: Feature matrix for training data
         2. X_test: Feature matrix for test data
@@ -82,7 +80,7 @@ def extract_features(docs_train, docs_test, perform_dimensionality_reduction):
 
     @Regions of improvement:
         1. Get more features and use them to get more accurate predictions 
-   
+
     """
     word_ngram_range = (1, 4)
     char_ngram_range = (2, 5)
@@ -91,70 +89,62 @@ def extract_features(docs_train, docs_test, perform_dimensionality_reduction):
     Build an n grams vectorizer with word_n_gram_range and char_n_gram_range
     '''
 
-    ngrams_vectorizer = create_n_grams_vectorizer(word_ngram_range, char_ngram_range)
-
+    ngrams_vectorizer = create_n_grams_vectorizer(
+        word_ngram_range, char_ngram_range)
 
     # use the n_gram vectorizer to form the train and test dataset
-    X_train = ngrams_vectorizer.fit_transform(docs_train) #it will take a lot of time... i think
+    # it will take a lot of time... i think
+    X_train = ngrams_vectorizer.fit_transform(docs_train)
     X_test = ngrams_vectorizer.transform(docs_test)
     print("Performed fitting of data")
-    ############ dimensionality reduction ################
-    
-    if(perform_dimensionality_reduction == True):                                 
-        X_train, X_test = perform_dimensionality_reduction(X_train, X_test)
-       
 
+    ############ dimensionality reduction ################
+
+    if(perform_dimensionality_reduction == True):
+        X_train, X_test = perform_dimensionality_reduction(X_train, X_test)
 
     # print(docs_train[0])
     return X_train, X_test
 
 
-
-
 def create_n_grams_vectorizer(word_ngram_range, char_ngram_range):
     word_vectorizer = TfidfVectorizer(preprocessor=preprocess_tweet,
-                                    analyzer='word',
-                                    ngram_range=word_ngram_range,
-                                    min_df=2,
-                                    use_idf=True, 
-                                    sublinear_tf=True)
+                                      analyzer='word',
+                                      ngram_range=word_ngram_range,
+                                      min_df=2,
+                                      use_idf=True,
+                                      sublinear_tf=True)
     print(f'Created a word vectorizer')
     char_vectorizer = TfidfVectorizer(preprocessor=preprocess_tweet,
-                                     analyzer='char', 
-                                     ngram_range=char_ngram_range,
-                                     min_df=2, 
-                                     use_idf=True, 
-                                     sublinear_tf=True)
+                                      analyzer='char',
+                                      ngram_range=char_ngram_range,
+                                      min_df=2,
+                                      use_idf=True,
+                                      sublinear_tf=True)
     print(f'Created a char vectorizer')
-
-
-
 
     ###############################################################################################
     ################## Count vectorizer -> which just computes the count of tokens ################
-
 
     '''
     Merge the two vectorizers using a pipeline
     '''
     return Pipeline([('feats', FeatureUnion([
-                                                        ('word_ngram', word_vectorizer),
-                                                         ('char_ngram', char_vectorizer)
-                                                         ])),
-                                 # ('clff', LinearSVC(random_state=42))
-                                 ])
-
-
+        ('word_ngram', word_vectorizer),
+        ('char_ngram', char_vectorizer)
+    ])),
+        # ('clff', LinearSVC(random_state=42))
+    ])
 
 
 def perform_dimensionality_reduction(X_train, X_test):
-    
+
     print("Performing dimensionality reduction")
     # use TruncatedSVD to reduce dimensionality of our dataset
-    svd = TruncatedSVD(n_components = 300, random_state = 42)
+    svd = TruncatedSVD(n_components=300, random_state=42)
 
     X_train = svd.fit_transform(X_train)
-    
+
     X_test = svd.transform(X_test)
-    
+
     print("Performed dimensionality reduction")
