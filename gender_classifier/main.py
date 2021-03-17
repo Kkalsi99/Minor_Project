@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # sklearn libraries
-from gender_classifier.TrainAndTest import cross_validate_model
-from gender_classifier.TrainAndTest import train_and_test_model
-from gender_classifier.FeatureExtraction import preprocess_tweet, extract_features
-from gender_classifier.DataInput import load_data
+from TrainAndTest import cross_validate_model
+from FeatureExtraction import preprocess_tweet, extract_features
+from DataInput import load_data
 from sklearn import utils
 import multiprocessing
 from gensim.models.doc2vec import TaggedDocument
