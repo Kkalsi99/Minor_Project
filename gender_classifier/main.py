@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # sklearn libraries
-from TrainAndTest import train_and_test_model
-from FeatureExtraction import preprocess_tweet, extract_features
-from DataInput import load_data
+from gender_classifier.TrainAndTest import cross_validate_model
+from gender_classifier.TrainAndTest import train_and_test_model
+from gender_classifier.FeatureExtraction import preprocess_tweet, extract_features
+from gender_classifier.DataInput import load_data
 from sklearn import utils
 import multiprocessing
 from gensim.models.doc2vec import TaggedDocument
@@ -88,54 +89,14 @@ def generate_output(merged_tweets, truths, author_ids, original_tweet_lengths):
 
     print("###############SVM###############")
     clf = LinearSVC(random_state=42, tol=0.3)
-    Kfolding(clf, X_train, X_test, y_train, y_test)
+    cross_validate_model(clf, X_train, X_test, y_train, y_test)
     print("###############DT###############")
     clf = DecisionTreeClassifier(criterion='entropy', random_state=0)
-    Kfolding(clf, X_train, X_test, y_train, y_test)
+    cross_validate_model(clf, X_train, X_test, y_train, y_test)
     print("###############RF###############")
     clf = RandomForestClassifier(n_estimators=1000)
-    Kfolding(clf, X_train, X_test, y_train, y_test)
+    cross_validate_model(clf, X_train, X_test, y_train, y_test)
 
-
-def Kfolding(clf, X_train, X_test, y_train, y_test):
-    whole_dataset_nparray = np.concatenate(
-        (X_train.toarray(), X_test.toarray()))
-
-    whole_output_nparray = y_train + y_test
-
-    kfold = KFold(n_splits=10, shuffle=True, random_state=1)
-
-    split_accuracies = []
-    split_f_measure = []
-    split_precision = []
-    split_recall = []
-
-    for train_ds_idxs, test_ds_idxs in kfold.split(whole_dataset_nparray):
-        X_train_cur, X_test_cur = whole_dataset_nparray[train_ds_idxs], whole_dataset_nparray[test_ds_idxs]
-        y_train = [whole_output_nparray[train_idx]
-                   for train_idx in train_ds_idxs]
-        y_test = [whole_output_nparray[test_idx] for test_idx in test_ds_idxs]
-
-        accuracy, f_measure, precision, recall = train_and_test_model(
-            clf, X_train_cur, y_train, X_test_cur, y_test)
-
-        split_accuracies.append(accuracy)
-        split_f_measure.append(f_measure)
-        split_precision.append(precision)
-        split_recall.append(recall)
-    ######################################################################
-    # building classifiers
-
-    # get avg accuracy
-    average_accuracy = sum(split_accuracies) / len(split_accuracies)
-    average_f_measure = sum(split_f_measure) / len(split_f_measure)
-    average_precision = sum(split_precision) / len(split_precision)
-    average_recall = sum(split_recall) / len(split_recall)
-
-    print(f'Average accuracy of our classifier : {average_accuracy}')
-    print(f'Average F-Measure of our classifier : {average_f_measure}')
-    print(f'Average Precision of our classifier : {average_precision}')
-    print(f'Average Recall of our classifier : {average_recall}')
 
 ############### Main function ######################
 
