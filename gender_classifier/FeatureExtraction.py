@@ -97,7 +97,7 @@ def extract_features(docs_train, docs_test, perform_dimensionality_reduction):
     X_train = ngrams_vectorizer.fit_transform(docs_train)
     X_test = ngrams_vectorizer.transform(docs_test)
     print("Performed fitting of data")
-    print(X_train)
+
     ############ dimensionality reduction ################
 
     if(perform_dimensionality_reduction == True):
