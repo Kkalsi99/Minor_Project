@@ -28,6 +28,10 @@ from sklearn.naive_bayes import GaussianNB, CategoricalNB, ComplementNB, Bernoul
 
 # support vector classifier
 from sklearn.svm import SVC, LinearSVC
+# LogisticRegression classifier
+from sklearn.linear_model import LogisticRegression
+# neural network classifier
+from sklearn.neural_network import MLPClassifier
 
 
 # nltk libraries
@@ -85,7 +89,13 @@ def generate_output(merged_tweets, truths, author_ids, original_tweet_lengths):
         (X_train.toarray(), X_test.toarray()))
 
     whole_output_nparray = y_train + y_test
+    clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
+                        random_state=1)
+    cross_validate_model(clf, X_train, X_test, y_train, y_test)
 
+    print("################LR##############")
+    clf = LogisticRegression(random_state=0)
+    cross_validate_model(clf, X_train, X_test, y_train, y_test)
     print("###############SVM###############")
     clf = LinearSVC(random_state=42, tol=0.3)
     cross_validate_model(clf, X_train, X_test, y_train, y_test)

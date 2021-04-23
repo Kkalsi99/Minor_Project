@@ -6,6 +6,8 @@ from sklearn.metrics import f1_score
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
+
+
 def cross_validate_model(clf, X_train, X_test, y_train, y_test):
     whole_dataset_nparray = np.concatenate(
         (X_train.toarray(), X_test.toarray()))
@@ -45,7 +47,6 @@ def cross_validate_model(clf, X_train, X_test, y_train, y_test):
     print(f'Average F-Measure of our classifier : {average_f_measure}')
     print(f'Average Precision of our classifier : {average_precision}')
     print(f'Average Recall of our classifier : {average_recall}')
-
 
 
 def train_and_test_model(clf, X_train, y_train, X_test, y_test):
