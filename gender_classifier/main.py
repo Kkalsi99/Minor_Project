@@ -85,14 +85,6 @@ def generate_output(merged_tweets, truths, author_ids, original_tweet_lengths):
     # form a giant 1 dataset
     # cross validate that 1 giant dataset
 
-    whole_dataset_nparray = np.concatenate(
-        (X_train.toarray(), X_test.toarray()))
-
-    whole_output_nparray = y_train + y_test
-    clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                        random_state=1)
-    cross_validate_model(clf, X_train, X_test, y_train, y_test)
-
     print("################LR##############")
     clf = LogisticRegression(random_state=0)
     cross_validate_model(clf, X_train, X_test, y_train, y_test)

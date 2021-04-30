@@ -14,7 +14,7 @@ def cross_validate_model(clf, X_train, X_test, y_train, y_test):
 
     whole_output_nparray = y_train + y_test
 
-    kfold = KFold(n_splits=10, shuffle=True, random_state=1)
+    kfold = KFold(n_splits=10, shuffle=False, random_state=1)
 
     split_accuracies = []
     split_f_measure = []
@@ -22,6 +22,7 @@ def cross_validate_model(clf, X_train, X_test, y_train, y_test):
     split_recall = []
 
     for train_ds_idxs, test_ds_idxs in kfold.split(whole_dataset_nparray):
+
         X_train_cur, X_test_cur = whole_dataset_nparray[train_ds_idxs], whole_dataset_nparray[test_ds_idxs]
         y_train = [whole_output_nparray[train_idx]
                    for train_idx in train_ds_idxs]
@@ -34,6 +35,7 @@ def cross_validate_model(clf, X_train, X_test, y_train, y_test):
         split_f_measure.append(f_measure)
         split_precision.append(precision)
         split_recall.append(recall)
+
     ######################################################################
     # building classifiers
 
